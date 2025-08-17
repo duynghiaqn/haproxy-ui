@@ -3,7 +3,7 @@ from functools import wraps
 import os, subprocess, datetime, threading, json
 
 app = Flask(__name__)
-app.secret_key = "haproxy_secret"
+app.secret_key = "91872df8b381edb66aee61c9dbd0ac7b5e8c8f39e3f29f7be3f81359311c15c1"
 
 ADMIN_USER = "admin"
 ADMIN_PASS = "admin"
@@ -329,3 +329,4 @@ threading.Thread(target=auto_renew_ssl, daemon=True).start()
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
