@@ -25,7 +25,7 @@ echo "=== Tạo virtualenv và cài Flask ==="
 python3 -m venv "$PROJECT_DIR/venv"
 source "$PROJECT_DIR/venv/bin/activate"
 pip install --upgrade pip
-pip install flask
+pip install flask requests python-dotenv
 
 echo "=== Cấu hình quyền sudo cho www-data chạy script update_haproxy_certs.sh ==="
 SUDO_LINE="www-data ALL=(ALL) NOPASSWD: $PROJECT_DIR/update_haproxy_certs.sh"
@@ -62,3 +62,4 @@ sudo chmod 700 /etc/haproxy/certs
 echo "=== Setup hoàn tất! ==="
 echo "Truy cập Dashboard: http://<server_ip>:5000"
 echo "Login: admin / admin"
+
