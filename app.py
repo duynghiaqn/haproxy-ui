@@ -16,7 +16,23 @@ def login_required(f):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated
+# --------- TELEGRAM CONFIG -----------
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")  # Set as env var or fix here
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")      # Set as env var or fix here
 
+def send_telegram_message(message):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return False, "Telegram token/chat_id chưa được cấu hình."
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
+    try:
+        resp = requests.post(url, data=payload, timeout=10)
+        if resp.status_code == 200:
+            return True, "Đã gửi telegram thành công."
+        else:
+            return False, f"Lỗi gửi telegram: {resp.text}"
+    except Exception as e:
+        return False, f"Lỗi gửi telegram: {e}"
 # ----------------- Paths -----------------
 CERTS_DIR = "/opt/haproxy_manager/certs"
 CRT_LIST = "/opt/haproxy_manager/crt-list.txt"
@@ -172,6 +188,33 @@ def index():
             expiring_certs.append({"domain":d,"days_left":(expire-now_dt).days})
     return render_template("index.html", certs=certs_info, expiring_certs=expiring_certs,
                            backends=backends, security=security, now=now_dt)
+# --------- SSL Expiry Telegram Route ----------
+@app.route("/notify_expiring_ssl", methods=["POST"])
+@login_required
+def notify_expiring_ssl():
+    domains = load_domains()
+    now_dt = datetime.datetime.now()
+    expiring = []
+    for d in domains:
+        pem_file = os.path.join(CERTS_DIR, f"{d}.pem")
+        expire = get_cert_expiry(pem_file)
+        if expire and (expire-now_dt).days < 30:
+            expiring.append({"domain": d, "days_left": (expire-now_dt).days, "expire": expire})
+    if not expiring:
+        flash("Không có SSL nào sắp hết hạn!", "info")
+        return redirect(url_for("index"))
+
+    msg_lines = ["*Danh sách SSL sắp hết hạn:*"]
+    for item in expiring:
+        msg_lines.append(f"- `{item['domain']}`: còn {item['days_left']} ngày (hết hạn: {item['expire'].strftime('%Y-%m-%d')})")
+    msg = "\n".join(msg_lines)
+
+    ok, resp = send_telegram_message(msg)
+    if ok:
+        flash("Đã gửi thông báo các SSL sắp hết hạn qua Telegram!", "success")
+    else:
+        flash(f"Lỗi gửi Telegram: {resp}", "error")
+    return redirect(url_for("index"))
 
 # -------- Domain ----------
 @app.route("/add_domain", methods=["POST"])
@@ -310,5 +353,6 @@ threading.Thread(target=auto_renew_ssl, daemon=True).start()
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
