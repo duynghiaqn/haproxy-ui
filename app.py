@@ -268,25 +268,6 @@ def do_reload():
     subprocess.run(["sudo",UPDATE_SCRIPT], check=True)
     flash("Reload HAProxy thành công!","success")
     return redirect(url_for("index"))
-
-# -------- Security ----------
-@app.route("/security", methods=["GET","POST"])
-@login_required
-def security():
-    if request.method=="POST":
-        cfg={
-            "ssl_protocols":request.form.get("ssl_protocols"),
-            "ssl_ciphers":request.form.get("ssl_ciphers"),
-            "hsts":request.form.get("hsts")=="on",
-            "x_frame_options":request.form.get("x_frame_options"),
-            "x_xss_protection":request.form.get("x_xss_protection"),
-            "csp":request.form.get("csp")
-        }
-        save_security_config(cfg)
-        flash("Cấu hình bảo mật đã cập nhật","success")
-        return redirect(url_for("index"))
-    cfg=load_security_config()
-    return render_template("security.html", cfg=cfg)
 #------------------------------------------
 @app.route("/haproxy_action/<action>", methods=["POST"])
 @login_required
@@ -329,4 +310,5 @@ threading.Thread(target=auto_renew_ssl, daemon=True).start()
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
