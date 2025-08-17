@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>HAProxy Security Settings</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="p-4">
+<div class="container">
+    <h2>Security Settings</h2>
+    <p><a href="{{ url_for('index') }}">Back to Dashboard</a></p>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+        <div class="alert alert-{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('update_security') }}">
+        <!-- SSL/TLS Protocols -->
+        <div class="mb-3">
+            <label class="form-label">SSL/TLS Protocols</label>
+            <select class="form-select" name="protocols">
+                <option value="TLSv1.2" {% if settings.protocols=='TLSv1.2' %}selected{% endif %}>TLSv1.2</option>
+                <option value="TLSv1.3" {% if settings.protocols=='TLSv1.3' %}selected{% endif %}>TLSv1.3</option>
+                <option value="TLSv1.2+TLSv1.3" {% if settings.protocols=='TLSv1.2+TLSv1.3' %}selected{% endif %}>TLSv1.2 + TLSv1.3</option>
+            </select>
+        </div>
+
+        <!-- Cipher Suites -->
+        <div class="mb-3">
+            <label class="form-label">SSL Cipher Suites</label>
+            <input type="text" class="form-control" name="ciphers" value="{{ settings.ciphers }}">
+            <small class="text-muted">Ví dụ: ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256</small>
+        </div>
+
+        <!-- HSTS -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" name="hsts" {% if settings.hsts %}checked{% endif %}>
+            <label class="form-check-label">Enable HSTS</label>
+        </div>
+
+        <!-- Rate Limit -->
+        <div class="mb-3">
+            <label class="form-label">Max Requests per Second</label>
+            <input type="number" class="form-control" name="rate_limit" value="{{ settings.rate_limit }}">
+        </div>
+
+        <!-- XSS / CSP -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" name="xss_protect" {% if settings.xss_protect %}checked{% endif %}>
+            <label class="form-check-label">Enable XSS / Content Security Policy</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Security Settings</button>
+    </form>
+</div>
+
+<script>
+document.querySelector('form').addEventListener('submit', e=>{
+    e.preventDefault();
+    Swal.fire({
+        title: 'Confirm update security settings?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, update'
+    }).then(result=>{
+        if(result.isConfirmed) e.target.submit();
+    });
+});
+</script>
+</body>
+</html>

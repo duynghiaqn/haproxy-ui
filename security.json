@@ -1,0 +1,7 @@
+{
+  "protocols": "TLSv1.2+TLSv1.3",
+  "ciphers": "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256",
+  "hsts": true,
+  "rate_limit": 100,
+  "xss_protect": true
+}
